@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>fat_swin_shop</title>
+  <script src="https://telegram.org"></script>
+  <style>
+    :root {
+      --bg: #09080d;
+      --card: #12101a;
+      --card-border: #271e3b;
+      --purple: #9333ea;
+      --red: #ef4444;
+      --grad: linear-gradient(135deg, #9333ea 0%, #ef4444 100%);
+      --text: #ffffff;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      background: radial-gradient(circle at top right, #1f1135 0%, var(--bg) 55%);
+      color: var(--text);
+      padding: 16px;
+      padding-bottom: 32px;
+      min-height: 100vh;
+    }
+    .header { text-align: center; margin-bottom: 16px; }
+    .header h1 {
+      font-size: 24px; font-weight: 900; letter-spacing: 0.5px;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header p { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .game-tabs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      background: var(--card); padding: 6px; border-radius: 14px;
+      border: 1px solid var(--card-border); margin-bottom: 14px;
+    }
+    .tab-btn {
+      background: transparent; border: none; color: var(--muted);
+      padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 800;
+      cursor: pointer; transition: 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--grad); color: #fff;
+      box-shadow: 0 4px 15px rgba(147, 51, 234, 0.35);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .label { font-size: 11px; text-transform: uppercase; color: #c084fc; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.8px; }
+    .currencies { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .curr-btn {
+      background: #0d0b14; border: 1px solid var(--card-border); color: var(--text);
+      padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: 0.15s; text-align: center;
+    }
+    .curr-btn.active {
+      border-color: var(--red);
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(239, 68, 68, 0.25));
+      color: #fff;
+    }
+    .amount-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .amount-box { display: flex; align-items: center; gap: 6px; }
+    .amount-input {
+      background: #0d0b14; border: 1px solid var(--purple); color: #fff;
+      font-size: 22px; font-weight: 800; width: 120px; padding: 8px; border-radius: 10px;
+      outline: none; text-align: center;
+    }
+    .amount-input:focus { border-color: var(--red); }
+    .unit-badge { font-weight: 900; font-size: 18px; color: var(--red); }
+    .price-tag { text-align: right; }
+    .price-tag .total { font-size: 24px; font-weight: 900; color: #fff; }
+    .price-tag .sub { font-size: 11px; color: #f87171; font-weight: 600; margin-top: 2px; }
+    input[type=range] {
+      width: 100%; accent-color: var(--red); height: 6px; background: #271e3b;
+      border-radius: 5px; outline: none; margin: 10px 0 14px;
+    }
+    .presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .preset-btn {
+      background: #1b1629; border: 1px solid #31254a; color: #e5e7eb; padding: 8px 0;
+      border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .preset-btn:active { background: var(--grad); color: #fff; border-color: transparent; }
+.rbx-hint {
+      display: none;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      color: #fca5a5;
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+    .rbx-hint b { color: #fff; }
+    .steps { list-style: none; font-size: 13px; color: #d1d5db; }
+    .steps li { margin-bottom: 8px; display: flex; gap: 8px; align-items: flex-start; }
+    .steps li:last-child { margin-bottom: 0; }
+    .step-num {
+      background: var(--grad); color: #fff;
+      font-weight: 800; min-width: 20px; height: 20px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
+    }
+    .buy-btn {
+      width: 100%; background: var(--grad); color: #fff; border: none;
+      padding: 15px; border-radius: 14px; font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: 0.15s; margin-top: 6px;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .buy-btn:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>FAT_SWIN SHOP</h1>
+    <p>Моментальная доставка • Без входа в аккаунт</p>
+  </div>
+
+  <div class="game-tabs">
+    <button class="tab-btn active" id="tab-gold" onclick="switchGame('gold')">🟡 Голда (0.85₽)</button>
+    <button class="tab-btn" id="tab-rbx" onclick="switchGame('rbx')">🟥 Robux (0.80₽)</button>
+  </div>
+
+  <div class="card">
+    <div class="label">1. Валюта оплаты</div>
+    <div class="currencies" id="currency-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="label" id="amount-label">2. Количество голды (мин. 50 G)</div>
+    <div class="amount-row">
+      <div class="amount-box">
+        <input type="number" id="amount-input" class="amount-input" value="200" min="50" max="50000">
+        <span class="unit-badge" id="unit-badge">G</span>
+      </div>
+      <div class="price-tag">
+        <div class="total" id="total-price">170 ₽</div>
+        <div class="sub" id="sub-badge">Комиссия рынка на нас</div>
+      </div>
+    </div>
+
+    <input type="range" id="amount-slider" min="50" max="5000" step="10" value="200">
+
+    <div class="presets" id="presets-box"></div>
+
+    <div class="rbx-hint" id="rbx-hint">
+      💡 Выставьте цену геймпасса: <b id="pass-price">200 R$</b>.<br>
+      💰 После комиссии Roblox (30%) вам на аккаунт придёт: <b id="clean-rbx">140 R$</b>.<br>
+      ⏳ Зачисление на баланс (Pending) занимает 5–7 дней.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Как проходит сделка?</div>
+    <ul class="steps" id="steps-list"></ul>
+  </div>
+
+  <button class="buy-btn" onclick="submitOrder()">🔥 Оформить заказ</button>
+
+  <script src="app.js"></script>
+</body>
+</html>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+const CURRENCIES = {
+  RUB: { mult: 1.0, symbol: "₽", flag: "🇷🇺", decimals: 2 },
+  BYN: { mult: 0.0365, symbol: "BYN", flag: "🇧🇾", decimals: 2 },
+  KZT: { mult: 5.47, symbol: "₸", flag: "🇰🇿", decimals: 0 },
+  UAH: { mult: 0.553, symbol: "₴", flag: "🇺🇦", decimals: 2 },
+  UZS: { mult: 145.9, symbol: "сум", flag: "🇺🇿", decimals: 0 },
+  KGS: { mult: 1.06, symbol: "сом", flag: "🇰🇬", decimals: 1 },
+  USD: { mult: 0.0121, symbol: "$", flag: "🇺🇸", decimals: 2 },
+  EUR: { mult: 0.0111, symbol: "€", flag: "🇪🇺", decimals: 2 }
+};
+
+const GAMES = {
+  gold: {
+    baseRub: 0.85,
+    unit: "G",
+    min: 50,
+    label: "2. Количество голды (мин. 50 G)",
+    sub: "Комиссия рынка на нас",
+    presets:,
+    steps: [
+      "Нажмите «Оформить заказ» — заявка улетит продавцу.",
+      "Получите реквизиты в чате и оплатите заказ.",
+      "Выставьте скин на рынок по инструкции и получите голду."
+    ]
+  },
+  rbx: {
+    baseRub: 0.80,
+    unit: "R$",
+    min: 50,
+    label: "2. Сумма геймпасса (мин. 50 R$)",
+    sub: "Метод: Game Pass",
+    presets:,
+    steps: [
+      "Создайте Game Pass на выбранную сумму в Roblox.",
+      "Оформите заказ и оплатите его по реквизитам в чате.",
+      "Скиньте ссылку на геймпасс — мы сразу его выкупим."
+    ]
+  }
+};
+
+let currentGame = "gold";
+let selectedCurr = "RUB";
+
+const amountInput = document.getElementById("amount-input");
+const amountSlider = document.getElementById("amount-slider");
+const totalPriceEl = document.getElementById("total-price");
+const currContainer = document.getElementById("currency-list");
+
+Object.keys(CURRENCIES).forEach(code => {
+  const btn = document.createElement("button");
+  btn.className = "curr-btn" + (code === selectedCurr ? " active" : "");
+  btn.innerHTML = ${CURRENCIES[code].flag} ${code};
+  btn.onclick = () => {
+    selectedCurr = code;
+    document.querySelectorAll(".curr-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateUI();
+  };
+  currContainer.appendChild(btn);
+});
+
+function switchGame(game) {
+  currentGame = game;
+  document.getElementById("tab-gold").classList.toggle("active", game === "gold");
+  document.getElementById("tab-rbx").classList.toggle("active", game === "rbx");
+
+  const cfg = GAMES[game];
+  document.getElementById("amount-label").innerText = cfg.label;
+  document.getElementById("unit-badge").innerText = cfg.unit;
+  document.getElementById("sub-badge").innerText = cfg.sub;
+  document.getElementById("rbx-hint").style.display = game === "rbx" ? "block" : "none";
+
+  const presetsBox = document.getElementById("presets-box");
+  presetsBox.innerHTML = "";
+  cfg.presets.forEach(val => {
+    const b = document.createElement("button");
+    b.className = "preset-btn";
+    b.innerText = ${val} ${cfg.unit};
+    b.onclick = () => {
+      amountInput.value = val;
+      amountSlider.value = Math.min(val, 5000);
+      updateUI();
+    };
+    presetsBox.appendChild(b);
+  });
+
+  const stepsList = document.getElementById("steps-list");
+  stepsList.innerHTML = cfg.steps.map((s, i) => <li><span class="step-num">${i + 1}</span> ${s}</li>).join("");
+
+  updateUI();
+}
+
+function updateUI() {
+  const cfg = GAMES[currentGame];
+  const curr = CURRENCIES[selectedCurr];
+  const val = parseInt(amountInput.value) || cfg.min;
+
+  const rubTotal = val * cfg.baseRub;
+  const raw = rubTotal * curr.mult;
+  const rounded = curr.decimals === 0 ? Math.round(raw) : Number(raw.toFixed(curr.decimals));
+  totalPriceEl.innerText = ${rounded.toLocaleString('ru-RU')} ${curr.symbol};
+
+  if (currentGame === "rbx") {
+    const cleanRbx = Math.floor(val * 0.7);
+    document.getElementById("pass-price").innerText = ${val} R$;
+    document.getElementById("clean-rbx").innerText = ${cleanRbx} R$;
+  }
+}
+
+amountSlider.addEventListener("input", () => {
+  amountInput.value = amountSlider.value;
+  updateUI();
+});
+
+amountInput.addEventListener("input", () => {
+  const val = parseInt(amountInput.value) || 50;
+  amountSlider.value = Math.min(Math.max(val, 50), 5000);
+  updateUI();
+});function submitOrder() {
+  const cfg = GAMES[currentGame];
+  const amount = parseInt(amountInput.value);
+  if (!amount || amount < cfg.min) {
+    tg.showAlert(Минимальный заказ — ${cfg.min} ${cfg.unit}!);
+    return;
+  }
